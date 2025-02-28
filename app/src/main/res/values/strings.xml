@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">AI Tarot Reading App</string>
+    <string name="homeSubText">What destiny do you seek today?</string>
+    <string name="heading_previous">Previous Readings</string>
+    <string name="avatar_content_description">Avatar Image View</string>
+    <string name="crystal_ball_sub_heading">Unveil your destiny</string>
+    <string name="listening">Listening...</string>
+    <string name="gracias">Gracias!</string>
+    <string name="chat_with_ai">Chat with AI</string>
+    <string name="back_button">back button</string>
+    <string name="delete_button">delete button</string>
+    <string name="type_message">Write your question...</string>
+    <string name="send_button">send button</string>
+    <string name="previous_readings">Previous Readings</string>
+</resources>
