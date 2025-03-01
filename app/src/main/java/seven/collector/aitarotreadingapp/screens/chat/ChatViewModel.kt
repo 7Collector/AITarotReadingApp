@@ -114,6 +114,10 @@ class ChatViewModel(
         _chatInputText.value = newText
     }
 
+    fun stopTTS() {
+        textToSpeech?.stop()
+    }
+
     fun sendMessage() {
         val currentReading = _reading.value
         if (chatInputText.value.isNotBlank() && currentReading != null) {

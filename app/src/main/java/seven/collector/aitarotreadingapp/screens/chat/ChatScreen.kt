@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -59,6 +60,12 @@ fun ChatScreen(id: Int, navController: NavController, viewModel: ChatViewModel =
 
     LaunchedEffect(reading?.chats?.size) {
         reading?.chats?.let { if (it.isNotEmpty()) listState.scrollToItem(it.size - 1) }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopTTS()
+        }
     }
 
     Background {

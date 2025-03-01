@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusModifier
@@ -114,7 +115,8 @@ fun ReadingScreen(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 TarotCard(
-                                    loadImageFromAssets(LocalContext.current, card.fileName),
+                                    key = card.name,
+                                    frontImage = loadImageFromAssets(LocalContext.current, card.fileName),
                                     backImage = loadImageFromAssets(LocalContext.current, "backside.png"),
                                     onCardSelected = {},
                                     selected = 3,

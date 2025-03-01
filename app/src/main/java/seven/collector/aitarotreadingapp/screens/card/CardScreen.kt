@@ -26,6 +26,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -36,6 +39,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,22 +82,24 @@ fun CardScreen(
     var aiInterpretationCompleted by remember { mutableStateOf(false) }
     val rotationAngle = remember { Animatable(0f) }
 
-    LaunchedEffect(selectedCards.intValue) {
-        if (selectedCards.intValue == 3) {
-            Log.d("LaunchedEffect", "Started Animation: ${selectedCards.intValue}")
-            rotationAngle.animateTo(
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 2000, easing = FastOutLinearInEasing),
-                    repeatMode = RepeatMode.Restart
+    // Start the rotation animation when 3 cards are selected.
+    LaunchedEffect(selectedCards.value) {
+        if (selectedCards.value == 3) {
+            // This loop will rotate the loader indefinitely.
+            while (true) {
+                rotationAngle.animateTo(
+                    targetValue = 360f,
+                    animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
                 )
-            )
+                rotationAngle.snapTo(0f)
+            }
         }
     }
 
-    LaunchedEffect(selectedCards.intValue, aiInterpretationCompleted) {
-        if (selectedCards.intValue == 3 && aiInterpretationCompleted) {
-            Log.d("LaunchedEffect", "Navigate to next screen: ${selectedCards.intValue}, $aiInterpretationCompleted")
+    // When both conditions are met, delay a little and then navigate.
+    LaunchedEffect(selectedCards.value, aiInterpretationCompleted) {
+        if (selectedCards.value == 3 && aiInterpretationCompleted) {
+            kotlinx.coroutines.delay(1000) // optional delay to let users see the loader state
             navController.navigate("reading/$id") {
                 popUpTo("cards/$id") { inclusive = true }
             }
@@ -101,20 +107,21 @@ fun CardScreen(
     }
 
     Background {
-        if (selectedCards.intValue == 3) {
+        if (selectedCards.value == 3) {
+            // Show animated loader with the rotating cards.
             AnimatedTarotCards(cards = selectedCardImages, rotationAngle = rotationAngle)
         } else {
+            // Card selection UI.
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(backgroundColor)
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)  // use a smaller spacing if desired
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -131,39 +138,33 @@ fun CardScreen(
                         color = primaryColor,
                     )
                 }
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                // Use LazyVerticalGrid with an Adaptive cell size so items wrap nicely
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 102.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp), // reduced vertical gap
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    items((cards.size + 5) / 6) { rowIndex ->
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            val startIndex = rowIndex * 6
-                            val endIndex = minOf(startIndex + 6, cards.size)
-                            items(endIndex - startIndex) { index ->
-                                val card = cards[startIndex + index]
-                                val frontImage = loadImageFromAssets(context, card.fileName)
-
-                                TarotCard(
-                                    frontImage = frontImage,
-                                    backImage = backImage,
-                                    onCardSelected = {
-                                        if (selectedCards.intValue < 3) {
-                                            selectedCards.intValue++
-                                            selectedCardImages.add(frontImage)
-                                            viewModel.selectCard(card)
-                                            if (selectedCards.intValue == 3) {
-                                                viewModel.sendMessage { _, _ ->
-                                                    aiInterpretationCompleted = true
-                                                }
-                                            }
+                    items(cards) { card ->
+                        val frontImage = loadImageFromAssets(context, card.fileName)
+                        TarotCard(
+                            key = card.name, // Use a stable key so that state is preserved
+                            frontImage = frontImage,
+                            backImage = backImage,
+                            onCardSelected = {
+                                if (selectedCards.value < 3) {
+                                    selectedCards.value++
+                                    selectedCardImages.add(frontImage)
+                                    viewModel.selectCard(card)
+                                    if (selectedCards.value == 3) {
+                                        viewModel.sendMessage { _, _ ->
+                                            aiInterpretationCompleted = true
                                         }
-                                    },
-                                    selected = selectedCards.intValue
-                                )
-                            }
-                        }
+                                    }
+                                }
+                            },
+                            selected = selectedCards.value
+                        )
                     }
                 }
             }
@@ -172,18 +173,19 @@ fun CardScreen(
 }
 
 
+
 fun loadCards(context: Context): List<Card> {
     return try {
         val json = context.assets.open("cards.json").bufferedReader().use { it.readText() }
         val jsonObject = Gson().fromJson(json, Map::class.java)
         val cardsArray = jsonObject["cards"] as List<Map<String, Any>>
-        cardsArray.map { cardMap ->
-            //Log.d("AAA", cardMap["img"].toString())
+        val shuffledCards = cardsArray.map { cardMap ->
             Card(
                 name = cardMap["name"] as String,
                 fileName = cardMap["img"] as String
             )
-        }
+        }.shuffled() // Shuffle the list before returning
+        shuffledCards
     } catch (e: IOException) {
         e.printStackTrace()
         emptyList()
@@ -198,13 +200,14 @@ fun loadImageFromAssets(context: Context, fileName: String): Bitmap {
 
 @Composable
 fun TarotCard(
+    key: String,
     frontImage: Bitmap,
     backImage: Bitmap,
     onCardSelected: () -> Unit,
     selected: Int,
     flipped: Boolean = false
 ) {
-    var isFlipped by remember { mutableStateOf(flipped) }
+    var isFlipped by rememberSaveable(key = key) { mutableStateOf(flipped) }
     val rotation = remember { Animatable(0f) }
 
     LaunchedEffect(isFlipped) {
