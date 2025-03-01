@@ -26,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,7 +46,7 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
 import seven.collector.aitarotreadingapp.TarotApp
 import seven.collector.aitarotreadingapp.database.models.Card
-import seven.collector.aitarotreadingapp.helpers.tarotChat
+import seven.collector.aitarotreadingapp.helpers.tarotInterpretationModel
 import seven.collector.aitarotreadingapp.theme.components.Background
 import seven.collector.aitarotreadingapp.theme.components.CrystalBall
 import seven.collector.aitarotreadingapp.theme.utilities.Typography
@@ -145,51 +144,11 @@ fun CardScreen(
                                             viewModel.selectCard(card)
                                             if (selectedCards.value == 3) {
                                                 transitionStarted.value = true
-                                                viewModel.saveReadingWithCards()
-                                                viewModel.viewModelScope.launch {
-                                                    try {
-                                                        val reading = viewModel.reading
-                                                        val question = reading.value?.question ?: ""
-                                                        val selectedCards =
-                                                            viewModel.getSelectedCards().toString()
-                                                        val sendData = mapOf(
-                                                            "question" to question,
-                                                            "selectedCards" to selectedCards
-                                                        )
-                                                        val jsonData = Gson().toJson(sendData)
-                                                        val response = tarotChat.sendMessage(
-                                                            jsonData
-                                                        )
-                                                        val responseString =
-                                                            response.text
-                                                                ?: "" // Ensure it's a JSON string
-                                                        Log.d("AIResponse", responseString)
-                                                        val responseMap: Map<String, String> =
-                                                            Gson().fromJson(
-                                                                responseString,
-                                                                object :
-                                                                    TypeToken<Map<String, String>>() {}.type
-                                                            )
-                                                        val title =
-                                                            responseMap["title"] ?: "Unknown Title"
-                                                        val interpretation =
-                                                            responseMap["interpretation"]
-                                                                ?: "No interpretation available"
-                                                        viewModel.saveReadingWithAI(
-                                                            title,
-                                                            interpretation
-                                                        )
-                                                        navController.navigate("reading/$id") {
-                                                            popUpTo("cards/${id}") {
-                                                                inclusive = true
-                                                            }
+                                                viewModel.sendMessage { _, _ ->
+                                                    navController.navigate("reading/$id") {
+                                                        popUpTo("cards/${id}") {
+                                                            inclusive = true
                                                         }
-                                                    } catch (e: Exception) {
-                                                        Log.e(
-                                                            "TarotChat",
-                                                            "Error sending message",
-                                                            e
-                                                        )
                                                     }
                                                 }
                                             }
@@ -213,7 +172,7 @@ fun loadCards(context: Context): List<Card> {
         val jsonObject = Gson().fromJson(json, Map::class.java)
         val cardsArray = jsonObject["cards"] as List<Map<String, Any>>
         cardsArray.map { cardMap ->
-            Log.d("AAA", cardMap["img"].toString())
+            //Log.d("AAA", cardMap["img"].toString())
             Card(
                 name = cardMap["name"] as String,
                 fileName = cardMap["img"] as String
@@ -227,7 +186,7 @@ fun loadCards(context: Context): List<Card> {
 
 
 fun loadImageFromAssets(context: Context, fileName: String): Bitmap {
-    Log.d("LoadImageFromAssets", "Loading image from assets: $fileName")
+   // Log.d("LoadImageFromAssets", "Loading image from assets: $fileName")
     return context.assets.open("cards/$fileName").use { BitmapFactory.decodeStream(it) }
 }
 

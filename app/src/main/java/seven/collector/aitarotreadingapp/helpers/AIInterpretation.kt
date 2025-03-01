@@ -13,21 +13,19 @@ private val sexuallyExplicit = SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, Blo
 private val hateSpeech = SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE)
 private val harassment = SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE)
 
-
-private val model = GenerativeModel(
+val tarotInterpretationModel = GenerativeModel(
     "gemini-2.0-flash",
     BuildConfig.geminiApiKey,
     generationConfig = generationConfig {
-        temperature = 0.8f
+        temperature = 1f
         topK = 40
         topP = 0.95f
-        maxOutputTokens = 4096
+        maxOutputTokens = 8192
         responseMimeType = "application/json"
     },
-    safetySettings = listOf(dangerousContent, sexuallyExplicit, hateSpeech, harassment),
     systemInstruction = content {
-    text(
-        """
+        text(
+            """
         Limit your response to 400 words. You are an expert tarot reader with deep knowledge of tarot symbolism, meanings, and interpretations.  
 
         Given a set of tarot cards, generate a compelling and insightful reading.  
@@ -43,14 +41,7 @@ private val model = GenerativeModel(
 
         Ensure the response is clear, structured, and provides a concrete overall evaluation that directly addresses the user's question.
         """.trimIndent()
-    )
-}
-
-
+        )
+    },
+    safetySettings = listOf(dangerousContent, sexuallyExplicit, hateSpeech, harassment),
 )
-
-
-val tarotChat = model.startChat()
-
-// Note that sendMessage() is a suspend function and should be called from
-// a coroutine scope or another suspend function
