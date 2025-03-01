@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -15,10 +16,14 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
+        val geminiApiKey: String? = project.findProperty("geminiApiKey") as String?
+        buildConfigField("String", "geminiApiKey", "\"${geminiApiKey ?: "default_value"}\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -54,10 +59,11 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.gson)
     testImplementation(libs.junit)
-    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    implementation(libs.generativeai)
+    annotationProcessor(libs.androidx.room.compiler)
     ksp(libs.room.compiler.v252)
     // optional - Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:2.5.2")
+    implementation(libs.androidx.room.ktx.v252)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

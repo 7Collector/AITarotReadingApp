@@ -20,7 +20,7 @@ class PreviousReadingsViewModel(private val readingDao: ReadingDao) : ViewModel(
 
     private fun fetchReadings() {
         viewModelScope.launch {
-            readingDao.getLastThreeReadings().collect { value ->
+            readingDao.getAllReadings().collect { value ->
                 _readings.value = value
             }
         }

@@ -9,8 +9,9 @@ import kotlinx.coroutines.launch
 import seven.collector.aitarotreadingapp.database.reading.ReadingDao
 import seven.collector.aitarotreadingapp.database.models.Chat
 import seven.collector.aitarotreadingapp.database.models.Reading
+import seven.collector.aitarotreadingapp.helpers.aiChat
 
-class ChatViewModel(private val readingDao: ReadingDao, private val readingId: String) : ViewModel() {
+class ChatViewModel(private val readingDao: ReadingDao, private val readingId: Int) : ViewModel() {
 
     private val _reading = MutableStateFlow<Reading?>(null)
     val reading: StateFlow<Reading?> = _reading
@@ -38,25 +39,38 @@ class ChatViewModel(private val readingDao: ReadingDao, private val readingId: S
     fun sendMessage() {
         val currentReading = _reading.value
         if (chatInputText.value.isNotBlank() && currentReading != null) {
-            val newChat = Chat(sender = "user", text = chatInputText.value)
-            val updatedChats = currentReading.chats + newChat
+            val userMessage = Chat(sender = "user", text = chatInputText.value)
+            val updatedChats = currentReading.chats + userMessage
             _reading.value = currentReading.copy(chats = updatedChats)
+            saveReading()
             _chatInputText.value = ""
-            aiRespond()
+            aiRespond(updatedChats)
         }
     }
 
-    private fun aiRespond() {
+    private fun aiRespond(updatedChats: List<Chat>) {
         _isAiResponding.value = true
+        val loadingMessage = Chat(sender = "ai", text = "...")
+        _reading.value = _reading.value?.copy(chats = updatedChats + loadingMessage)
+
         viewModelScope.launch {
-            kotlinx.coroutines.delay(1000)
-            val currentReading = _reading.value
-            if (currentReading != null) {
-                val aiResponse = Chat(sender = "ai", text = "This is an AI-generated response.")
-                val updatedChats = currentReading.chats + aiResponse
-                _reading.value = currentReading.copy(chats = updatedChats)
-            }
+            val sendData = mapOf(
+                "cards" to reading.value?.cards,
+                "message" to reading.value?.chats?.last()?.text,
+                "question" to reading.value?.question,
+                "history" to reading.value?.chats,
+            )
+            val aiResponseText = aiChat.sendMessage(sendData.toString()).text
+            val aiResponse = Chat(sender = "ai", text = aiResponseText ?: "I see something interesting...")
+            _reading.value = _reading.value?.copy(chats = updatedChats + aiResponse)
+            saveReading()
             _isAiResponding.value = false
+        }
+    }
+
+    private fun saveReading() {
+        viewModelScope.launch {
+            reading.value?.let { readingDao.updateReading(it) }
         }
     }
 }

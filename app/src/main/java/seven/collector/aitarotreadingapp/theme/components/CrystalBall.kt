@@ -20,9 +20,9 @@ import seven.collector.aitarotreadingapp.theme.utilities.radialStartColor
 
 @Composable
 fun CrystalBall(onClick: () -> Unit = {}) {
-    Box(modifier = Modifier.fillMaxSize().clickable { onClick() }, contentAlignment = Alignment.Center) {
+    Box(modifier = Modifier.size(300.dp).clickable { onClick() }, contentAlignment = Alignment.Center) {
         // Main Circle
-        Canvas(modifier = Modifier.fillMaxSize()) {
+        Canvas(modifier = Modifier.size(220.dp)) {
             val gradient = Brush.radialGradient(
                 colors = listOf(radialStartColor, primaryColor, Color.Black),
                 center = center,
@@ -39,7 +39,7 @@ fun CrystalBall(onClick: () -> Unit = {}) {
         // Glow Circle
         Canvas(
             modifier = Modifier
-                .fillMaxSize()
+                .size(300.dp)
                 .blur(30.dp)
         ) {
             drawCircle(

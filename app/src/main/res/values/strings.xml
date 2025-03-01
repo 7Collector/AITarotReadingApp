@@ -12,4 +12,5 @@
     <string name="type_message">Write your question...</string>
     <string name="send_button">send button</string>
     <string name="previous_readings">Previous Readings</string>
+    <string name="all_readings_button">All Readings Button</string>
 </resources>

@@ -7,10 +7,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import seven.collector.aitarotreadingapp.helpers.SpeechToTextHelper
 import seven.collector.aitarotreadingapp.screens.card.CardScreen
 import seven.collector.aitarotreadingapp.screens.chat.ChatScreen
 import seven.collector.aitarotreadingapp.screens.home.HomeScreen
@@ -27,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        sharedPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        sharedPrefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         //val isFirstLaunch = sharedPrefs.getBoolean("isFirstLaunch", true)
         val isFirstLaunch = false
         setContent {
@@ -44,18 +46,21 @@ fun TarotApp(isFirstLaunch: Boolean) {
         startDestination = if (isFirstLaunch) "onboarding" else "home"
     ) {
         composable("onboarding") { OnboardingScreen(navController) }
-        composable("home") { HomeScreen(navController) }
+        composable("home") { HomeScreen(
+            SpeechToTextHelper(LocalContext.current),
+            navController,
+        ) }
         composable("previous") { PreviousReadings(navController) }
-        composable("cards") { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id") ?: ""
+        composable("cards/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")?.toInt() ?: 0
             CardScreen(id, navController)
         }
         composable("reading/{id}") { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            val id = backStackEntry.arguments?.getString("id")?.toInt() ?: 0
             ReadingScreen(id, navController)
         }
         composable("chat/{id}") { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id") ?: ""
+            val id = backStackEntry.arguments?.getString("id")?.toInt() ?: 0
             ChatScreen(id, navController)
         }
     }
