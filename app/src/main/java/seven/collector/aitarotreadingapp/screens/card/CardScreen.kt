@@ -6,7 +6,13 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,15 +45,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import kotlinx.coroutines.launch
 import seven.collector.aitarotreadingapp.TarotApp
 import seven.collector.aitarotreadingapp.database.models.Card
-import seven.collector.aitarotreadingapp.helpers.tarotInterpretationModel
 import seven.collector.aitarotreadingapp.theme.components.Background
 import seven.collector.aitarotreadingapp.theme.components.CrystalBall
 import seven.collector.aitarotreadingapp.theme.utilities.Typography
@@ -70,27 +73,35 @@ fun CardScreen(
     val context = LocalContext.current
     val cards = remember { loadCards(context) }
     val backImage = remember { loadImageFromAssets(context, "backside.png") }
-    val selectedCards = remember { mutableStateOf(0) }
+    val selectedCards = remember { mutableIntStateOf(0) }
     val selectedCardImages = remember { mutableStateListOf<Bitmap>() }
+    var aiInterpretationCompleted by remember { mutableStateOf(false) }
     val rotationAngle = remember { Animatable(0f) }
-    val transitionStarted = remember { mutableStateOf(false) }
 
-    LaunchedEffect(selectedCards.value) {
-        if (selectedCards.value == 3) {
-            transitionStarted.value = true
+    LaunchedEffect(selectedCards.intValue) {
+        if (selectedCards.intValue == 3) {
+            Log.d("LaunchedEffect", "Started Animation: ${selectedCards.intValue}")
             rotationAngle.animateTo(
                 targetValue = 360f,
-                animationSpec = tween(durationMillis = 2000, easing = FastOutSlowInEasing)
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 2000, easing = FastOutLinearInEasing),
+                    repeatMode = RepeatMode.Restart
+                )
             )
+        }
+    }
+
+    LaunchedEffect(selectedCards.intValue, aiInterpretationCompleted) {
+        if (selectedCards.intValue == 3 && aiInterpretationCompleted) {
+            Log.d("LaunchedEffect", "Navigate to next screen: ${selectedCards.intValue}, $aiInterpretationCompleted")
             navController.navigate("reading/$id") {
                 popUpTo("cards/$id") { inclusive = true }
             }
         }
     }
 
-
     Background {
-        if (transitionStarted.value) {
+        if (selectedCards.intValue == 3) {
             AnimatedTarotCards(cards = selectedCardImages, rotationAngle = rotationAngle)
         } else {
             Column(
@@ -138,23 +149,18 @@ fun CardScreen(
                                     frontImage = frontImage,
                                     backImage = backImage,
                                     onCardSelected = {
-                                        if (selectedCards.value < 3) {
-                                            selectedCards.value++
+                                        if (selectedCards.intValue < 3) {
+                                            selectedCards.intValue++
                                             selectedCardImages.add(frontImage)
                                             viewModel.selectCard(card)
-                                            if (selectedCards.value == 3) {
-                                                transitionStarted.value = true
+                                            if (selectedCards.intValue == 3) {
                                                 viewModel.sendMessage { _, _ ->
-                                                    navController.navigate("reading/$id") {
-                                                        popUpTo("cards/${id}") {
-                                                            inclusive = true
-                                                        }
-                                                    }
+                                                    aiInterpretationCompleted = true
                                                 }
                                             }
                                         }
                                     },
-                                    selected = selectedCards.value
+                                    selected = selectedCards.intValue
                                 )
                             }
                         }
@@ -186,7 +192,7 @@ fun loadCards(context: Context): List<Card> {
 
 
 fun loadImageFromAssets(context: Context, fileName: String): Bitmap {
-   // Log.d("LoadImageFromAssets", "Loading image from assets: $fileName")
+    // Log.d("LoadImageFromAssets", "Loading image from assets: $fileName")
     return context.assets.open("cards/$fileName").use { BitmapFactory.decodeStream(it) }
 }
 

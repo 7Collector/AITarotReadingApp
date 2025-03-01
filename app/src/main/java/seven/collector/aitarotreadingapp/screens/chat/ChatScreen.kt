@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -65,7 +66,6 @@ fun ChatScreen(id: Int, navController: NavController, viewModel: ChatViewModel =
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Top bar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -95,7 +95,6 @@ fun ChatScreen(id: Int, navController: NavController, viewModel: ChatViewModel =
                 }
             }
 
-            // Input Field
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -109,14 +108,14 @@ fun ChatScreen(id: Int, navController: NavController, viewModel: ChatViewModel =
                     modifier = Modifier.weight(1f),
                     placeholder = { Text(stringResource(R.string.type_message)) },
                     textStyle = Typography.bodyLarge.copy(color = textColor),
-                    colors = TextFieldDefaults.colors( // ✅ Correct for Material3
+                    colors = TextFieldDefaults.colors(
                         focusedTextColor = textColor,
                         unfocusedTextColor = textColor,
                         disabledTextColor = textColor.copy(alpha = 0.5f),
                         errorTextColor = textColor,
 
-                        focusedContainerColor = containerColor, // ✅ Background when focused
-                        unfocusedContainerColor = containerColor, // ✅ Background when not focused
+                        focusedContainerColor = containerColor,
+                        unfocusedContainerColor = containerColor,
                         disabledContainerColor = containerColor,
                         errorContainerColor = containerColor,
 
@@ -124,8 +123,8 @@ fun ChatScreen(id: Int, navController: NavController, viewModel: ChatViewModel =
                         errorCursorColor = primaryColor,
                         selectionColors = TextSelectionColors(primaryColor, primaryColor.copy(alpha = 0.4f)),
 
-                        focusedIndicatorColor = primaryColor, // ✅ Focused border color
-                        unfocusedIndicatorColor = textColor.copy(alpha = 0.4f), // ✅ Unfocused border color
+                        focusedIndicatorColor = primaryColor,
+                        unfocusedIndicatorColor = textColor.copy(alpha = 0.4f),
                         disabledIndicatorColor = textColor.copy(alpha = 0.2f),
                         errorIndicatorColor = primaryColor,
 
@@ -143,11 +142,12 @@ fun ChatScreen(id: Int, navController: NavController, viewModel: ChatViewModel =
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.mic), // send.png
+                        painter = painterResource(id = R.drawable.mic),
                         contentDescription = "Send",
-                        modifier = Modifier.size(24.dp) // Adjust icon size
+                        modifier = Modifier.size(24.dp)
                     )
                 }
+                Spacer(Modifier.width(8.dp))
                 if (chatInputText.isNotEmpty() && !isAiResponding) {
                     Box(
                         modifier = Modifier
@@ -157,9 +157,9 @@ fun ChatScreen(id: Int, navController: NavController, viewModel: ChatViewModel =
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.send), // send.png
+                            painter = painterResource(id = R.drawable.send),
                             contentDescription = "Send",
-                            modifier = Modifier.size(24.dp) // Adjust icon size
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }

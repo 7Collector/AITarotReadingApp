@@ -55,14 +55,13 @@ fun ReadingScreen(
 
     reading?.let { currentReading ->
         Background {
-            LazyColumn(  // Changed from Column to LazyColumn for scrolling
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    // Top bar
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -95,7 +94,6 @@ fun ReadingScreen(
                 }
 
                 item {
-                    // Question and Answer
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -106,7 +104,6 @@ fun ReadingScreen(
                 }
 
                 item {
-                    // Cards (LazyRow remains for horizontal scrolling)
                     LazyRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -131,7 +128,6 @@ fun ReadingScreen(
                 }
 
                 item {
-                    // Chat with AI Button
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()

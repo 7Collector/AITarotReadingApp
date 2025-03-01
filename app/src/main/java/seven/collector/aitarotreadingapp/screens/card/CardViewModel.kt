@@ -1,10 +1,12 @@
 package seven.collector.aitarotreadingapp.screens.card
 
 import android.util.Log
+import androidx.compose.ui.input.key.type
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +14,9 @@ import kotlinx.coroutines.launch
 import seven.collector.aitarotreadingapp.database.models.Card
 import seven.collector.aitarotreadingapp.database.models.Reading
 import seven.collector.aitarotreadingapp.database.reading.ReadingDao
-import seven.collector.aitarotreadingapp.helpers.tarotInterpretationModel
+import seven.collector.aitarotreadingapp.helpers.tarotReadingModel
+import java.io.IOException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CardViewModel(private val id: Int, private val readingDao: ReadingDao) : ViewModel() {
     private val selectedCards = mutableListOf<Card>()
@@ -76,32 +80,47 @@ class CardViewModel(private val id: Int, private val readingDao: ReadingDao) : V
         viewModelScope.launch {
             Log.d("AIInterpretation", "aiRespond function called")
             try {
+                // Use only card names for simplicity
                 val sendData = mapOf(
-                    "cards" to selectedCards,
-                    "question" to reading.value?.question,
+                    "cards" to selectedCards.map { it.name },
+                    "question" to reading.value?.question
                 )
-                Log.d("AIInterpretation", "SendData:$sendData")
-                val aiResponseText = tarotInterpretationModel.startChat().sendMessage(sendData.toString())
-                Log.d("AIInterpretation", "AIResponse:${aiResponseText}")
-                val responseMap: Map<String, String> = Gson().fromJson(
-                    aiResponseText.toString(),
-                    object : TypeToken<Map<String, String>>() {}.type
-                )
+                Log.d("AIInterpretation", "SendData: $sendData")
+                // Serialize sendData to JSON
+                val gson = Gson()
+                val sendDataJson = gson.toJson(sendData)
+
+                val aiResponseText = tarotReadingModel.generateContent(sendDataJson)
+                Log.d("AIInterpretation", "Raw AI Response: ${aiResponseText.text}")
+
+                val responseMap: Map<String, String> = try {
+                    gson.fromJson(
+                        aiResponseText.text,
+                        object : TypeToken<Map<String, String>>() {}.type
+                    )
+                } catch (e: JsonSyntaxException) {
+                    Log.e("AIInterpretation", "Invalid JSON response: ${e.message}", e)
+                    onResult("Error", "Failed to parse AI response")
+                    return@launch
+                }
 
                 val title = responseMap["title"] ?: "Unknown Title"
                 val interpretation = responseMap["interpretation"] ?: "No interpretation available"
 
                 saveReadingWithAI(title, interpretation)
-
                 onResult(title, interpretation)
 
+            } catch (e: CancellationException) {
+                Log.i("AIInterpretation", "Coroutine was cancelled: ${e.message}")
+            } catch (e: IOException) {
+                Log.e("AIInterpretation", "Network error: ${e.message}", e)
+                onResult("Error", "Network error: ${e.message}")
             } catch (e: Exception) {
                 Log.e("AIInterpretation", "Exception in aiRespond: ${e.message}", e)
                 onResult("Error", "Failed to generate interpretation due to error: ${e.message}")
             }
         }
     }
-
 
 }
 

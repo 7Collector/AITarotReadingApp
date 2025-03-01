@@ -116,7 +116,6 @@ fun HomeScreen(
                 }
             }
 
-            // Previous Readings
             if (previousReadings.isNotEmpty() && !inputMode) {
                 PreviousReadingsPart(previousReadings, navController)
             }
@@ -228,8 +227,8 @@ fun InputBox(viewModel: HomeViewModel, navController: NavController) {
                 value = userInput,
                 onValueChange = {
                     userInput = it
-                    if (viewModel.inputMode.value) {
-                        //viewModel.inputMode.value = false  // Stop STT when user types
+                    if (viewModel.listeningMode.value) {
+                        viewModel.stopSTT()
                     }
                 },
                 placeholder = { Text("Speak or type your question...", color = textColor.copy(alpha = 0.6f)) },
@@ -237,7 +236,7 @@ fun InputBox(viewModel: HomeViewModel, navController: NavController) {
                     .weight(1f)
                     .background(containerColor, RoundedCornerShape(8.dp)),
                 textStyle = Typography.bodyLarge.copy(color = textColor),
-                colors = TextFieldDefaults.colors( // ✅ Correct for Material3
+                colors = TextFieldDefaults.colors(
                     focusedTextColor = textColor,
                     unfocusedTextColor = textColor,
                     disabledTextColor = textColor.copy(alpha = 0.5f),
