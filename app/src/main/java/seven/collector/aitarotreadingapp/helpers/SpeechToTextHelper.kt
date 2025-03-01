@@ -14,7 +14,8 @@ class SpeechToTextHelper(
 ) {
     private lateinit var onResult: (String) -> Unit
     private lateinit var viewModel: HomeViewModel
-    private val speechRecognizer: SpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
+    private val speechRecognizer: SpeechRecognizer =
+        SpeechRecognizer.createSpeechRecognizer(context)
 
     fun setViewModel(hVM: HomeViewModel) {
         viewModel = hVM
@@ -35,6 +36,7 @@ class SpeechToTextHelper(
                 if (viewModel.speechText.value.isEmpty()) {
                     //viewModel.inputMode.value = false // Reset input mode if no text
                 }
+                stopListening()
             }
 
             override fun onError(error: Int) {
@@ -62,11 +64,19 @@ class SpeechToTextHelper(
     }
 
     fun startListening() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-        }
-        speechRecognizer.startListening(intent)
+        val speechIntent =
+            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(
+                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                )
+                putExtra(
+                    RecognizerIntent.EXTRA_LANGUAGE,
+                    java.util.Locale.getDefault()
+                )
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
+            }
+        speechRecognizer.startListening(speechIntent)
     }
 
     fun stopListening() {

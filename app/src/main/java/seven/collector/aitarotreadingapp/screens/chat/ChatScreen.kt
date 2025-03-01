@@ -35,7 +35,7 @@ import seven.collector.aitarotreadingapp.theme.utilities.textColor
 @Composable
 fun ChatScreen(id: Int, navController: NavController, viewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(
     (LocalContext.current.applicationContext as TarotApp).database.readingDao(),
-    readingId = id
+    readingId = id, LocalContext.current
 ))) {
     val reading by viewModel.reading.collectAsStateWithLifecycle()
     val isAiResponding by viewModel.isAiResponding.collectAsStateWithLifecycle()
@@ -121,7 +121,19 @@ fun ChatScreen(id: Int, navController: NavController, viewModel: ChatViewModel =
                         errorTrailingIconColor = primaryColor
                     )
                 )
-
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(primaryColor, RoundedCornerShape(32.dp))
+                        .clickable { viewModel.startListening() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.mic), // send.png
+                        contentDescription = "Send",
+                        modifier = Modifier.size(24.dp) // Adjust icon size
+                    )
+                }
                 if (chatInputText.isNotEmpty() && !isAiResponding) {
                     Box(
                         modifier = Modifier

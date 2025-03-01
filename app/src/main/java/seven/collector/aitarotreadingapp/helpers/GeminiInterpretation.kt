@@ -21,7 +21,7 @@ private val model = GenerativeModel(
         temperature = 0.8f
         topK = 40
         topP = 0.95f
-        maxOutputTokens = 8192
+        maxOutputTokens = 4096
         responseMimeType = "application/json"
     },
     safetySettings = listOf(dangerousContent, sexuallyExplicit, hateSpeech, harassment),
