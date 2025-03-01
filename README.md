@@ -2,6 +2,7 @@
 
 ## Overview
 The AI Tarot Reading App is a mobile application that provides tarot readings powered by AI. Users can interact with the AI via chat to receive tarot card interpretations and insights.
+[Download APK](https://raw.githubusercontent.com/7Collector/AITarotReadingApp/refs/heads/main/AITarotReadingApp.apk)
 
 ## Features
 - AI-powered tarot reading
