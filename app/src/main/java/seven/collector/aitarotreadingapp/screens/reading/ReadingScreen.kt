@@ -84,7 +84,11 @@ fun ReadingScreen(
                             painter = painterResource(id = R.drawable.delete),
                             modifier = Modifier
                                 .size(24.dp)
-                                .clickable { /* Handle delete */ },
+                                .clickable {
+                                    viewModel.deleteReading(onResult = {
+                                        navController.popBackStack()
+                                    })
+                                },
                             contentDescription = stringResource(R.string.delete_button)
                         )
                     }

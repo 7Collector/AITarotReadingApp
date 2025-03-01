@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 import seven.collector.aitarotreadingapp.database.models.Reading
 import seven.collector.aitarotreadingapp.database.reading.ReadingDao
 
-class ReadingViewModel(id: Int, private val readingDao: ReadingDao) : ViewModel() {
+class ReadingViewModel(private val id: Int, private val readingDao: ReadingDao) : ViewModel() {
 
     private val _reading = MutableStateFlow<Reading?>(null)
     val reading: StateFlow<Reading?> get() = _reading
@@ -21,5 +21,12 @@ class ReadingViewModel(id: Int, private val readingDao: ReadingDao) : ViewModel(
 
     private suspend fun loadReading(id: Int): Reading? {
         return readingDao.getReadingById(id)
+    }
+
+    fun deleteReading(onResult: () -> Unit) {
+        viewModelScope.launch {
+            readingDao.deleteReading(id)
+            onResult()
+        }
     }
 }
